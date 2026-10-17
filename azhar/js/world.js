@@ -108,7 +108,7 @@ function updateWorld(dt) {
     f.vy = Math.min(f.vy + 1700 * dt, 900); f.y += f.vy * dt; f.rot += dt * 0.6;
     const c = Math.round(f.x / W);
     // hurts the player if it lands on them
-    if (P.alive && Math.abs(P.x - (f.x + W / 2)) < 30 && f.y > P.y - 95 && py <= P.y - 95 && P.st !== 'dead') hurtPlayer(1, 'rubble');
+    if (P.alive && Math.abs(P.x - (f.x + W / 2)) < 30 && f.y > P.y - 95 && py <= P.y - 95 && P.alive) hurtPlayer(1, 'rubble');
     let done = false;
     for (let r = f.r0 + 1; r < L.rows; r++) {
       const fy = floorY(r);
@@ -154,7 +154,7 @@ function showMsg(text, secs = 2.5) { Msg.text = text; Msg.t = secs; }
 
 const Cam = { rx: 0, ry: 0 };
 function updateCamera() {
-  const cy = P.st === 'hang' || P.st === 'climb' || P.st === 'jumpUp' ? P.y - HANG - 6 : P.y - 40;
+  const cy = isHanging() && !(P.seq === "jumpgrab" && P.fi < 3) ? P.y - HANG - 6 : P.y - 40;
   Cam.rx = clamp(Math.floor(P.x / (ROOM_C * W)), 0, Math.ceil(L.cols / ROOM_C) - 1);
   Cam.ry = clamp(Math.floor(cy / (ROOM_R * H)), 0, Math.ceil(L.rows / ROOM_R) - 1);
 }

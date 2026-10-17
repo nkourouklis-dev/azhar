@@ -2,7 +2,6 @@
 const W = 64, H = 126, ROOM_C = 10, ROOM_R = 3;
 const VIEW_W = 640, VIEW_H = 378, HUD_H = 22, CANVAS_H = VIEW_H + HUD_H;
 const FLOOR_OFF = 12;      // walking surface sits this far above the cell bottom
-const FIG_SC = 0.86;       // characters are drawn at this scale so they fit the rooms like the original
 const HANG = 90;           // feet are this far below the hands while hanging
 const TOTAL_TIME = 30 * 60; // seconds to rescue the princess
 

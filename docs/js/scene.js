@@ -61,20 +61,20 @@ function drawScene(ctx) {
   // princess
   if (L.princess && inView(L.princess.c, L.princess.r)) {
     const q = L.princess;
-    drawFigure(ctx, q.c * W + W / 2 + 8, floorY(q.r), -1, Game.state === 'won' ? pose({ armF: A_(1.4, 1.8), armB: A_(1.1, 1.5) }) : pose(Object.assign(standPose(L.time), { armF: A_(0.45, 1.7), armB: A_(0.3, 1.6) })), PRINCESS, { ground: true });
+    drawSprite(ctx, q.c * W + W / 2 + 8, floorY(q.r), -1, Game.state === 'won' ? SEQ.win.frames[0].p : PRINCESS_POSE, PRINCESS, { shadow: true });
   }
   // guards
   for (const g of guards) {
     if (g.y > 1e5 || !inView(colOf(g.x), rowOf(g.y))) continue;
-    const ps = guardPose(g);
     if (!g.look) g.look = guardLook(g.style);
-    drawFigure(ctx, g.x, g.y, g.dir, ps, g.look, { solved: smoothedFor(g, ps, dtR), swordDrawn: g.st !== 'dead', hasSword: g.st === 'dead', ground: true, beard: true, flash: g.flash, still: g.st === 'dead' });
-    if (g.st === 'dead' && g.t < 0.6) for (let i = 0; i < 2; i++) spawn({ x: g.x - g.dir * rand(0, 40), y: g.y - 4, vx: rand(-20, 20), vy: rand(-30, -10), life: 1, g: -5, size: rand(6, 12), kind: 'dust' });
+    drawSprite(ctx, g.x, g.y, g.dir, g.frs[g.fi].p, g.look, { flash: g.flash > 0 && Math.floor(g.flash * 20) % 2 === 0, shadow: g.seq !== 'fall' });
+    if (!g.alive && g.deadT < 0.6 && g.seq !== 'fall') for (let i = 0; i < 2; i++) spawn({ x: g.x - g.dir * rand(0, 40), y: g.y - 4, vx: rand(-20, 20), vy: rand(-30, -10), life: 1, g: -5, size: rand(6, 12), kind: 'dust' });
   }
   // prince
-  {
-    const ps = playerPose(), drawn = (P.hasSword && ['fight', 'advance', 'retreat', 'strike', 'block', 'hurt', 'parried'].includes(P.st)) || (P.st === 'draw' && P.t > 0.12) || (P.st === 'sheathe' && P.t < 0.25) || (P.st === 'pickup' && P.t > 0.5);
-    drawFigure(ctx, P.x, P.y, P.dir, ps, PRINCE, { solved: smoothedFor(P, ps, dtR), swordDrawn: drawn, hasSword: P.hasSword, ground: groundedStates.has(P.st) || P.st === 'dead', flash: P.flash, flow: Math.min(1, Math.abs(P.vx) / RUN), jewel: '#b3261e', still: !P.alive, hold: P.st === 'drink' && P.t > 0.2 && P.t < 1.0 ? (P.mv.it.type === 'H' ? '#50dc8c' : '#e6323c') : null });
+  if (P.seq !== 'gone') {
+    const holding = P.seq === 'drink' && P.fi >= 3 && P.fi <= 16 ? P.drinkCol : null;
+    drawSprite(ctx, P.x, P.y, P.dir, curFrame().p, PRINCE, { flash: P.flash > 0 && P.alive && Math.floor(P.flash * 20) % 2 === 0, scabbard: P.hasSword, hold: holding,
+      shadow: onGround(), alpha: P.seq === 'exit' ? clamp(1 - (P.fi - 4) / 7, 0, 1) : null });
   }
   // front layer: gates and blades
   for (const g of L.gates.values()) if (inView(g.c, g.r)) drawGate(ctx, g);
