@@ -172,10 +172,11 @@ function tryClimbDown() {
   return false;
 }
 
-// A careful step: a full cell, or exactly up to the edge; at the edge itself he tests his footing.
+// A careful step: half a cell, or exactly up to the edge; at the edge itself he tests his footing.
+const STEP_UNITS = 7;
 function beginStep(fi = 1) {
   P.qStep = 0;
-  const e = edgeAhead(P.dir), d = Math.min(14 * U, e, wallAhead(P.dir));
+  const e = edgeAhead(P.dir), d = Math.min(STEP_UNITS * U, e, wallAhead(P.dir));
   if (e < 2) { setSeq('testfoot'); return; }
   if (d < U * 0.6) { setSeq('stand'); return; }
   setSeq('step', fi, stepFrames(Math.floor(d / U + 0.01)));

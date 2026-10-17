@@ -18,7 +18,7 @@ function drawScene(ctx) {
   const sh = L.shake > 0 ? (Math.random() - 0.5) * 6 * L.shake / 0.25 : 0;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.fillStyle = '#000'; ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-  ctx.drawImage(BG, ox * RS, oy * RS, VIEW_W * RS, VIEW_H * RS, sh * RS, sh * RS, VIEW_W * RS, VIEW_H * RS);
+  ctx.drawImage(roomBG(Cam.rx, Cam.ry), 0, 0, Math.ceil(VIEW_W * RS), Math.ceil(VIEW_H * RS), sh * RS, sh * RS, Math.ceil(VIEW_W * RS), Math.ceil(VIEW_H * RS));
   ctx.setTransform(RS, 0, 0, RS, (-ox + sh) * RS, (-oy + sh) * RS);
 
   // door

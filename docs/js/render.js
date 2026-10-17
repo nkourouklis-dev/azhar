@@ -3,20 +3,35 @@ const THEMES = {
   dungeon: { bh: 214, bs: 15, bl: 23, mortar: '#090d15', blk: [214, 13, 33], top: '#97a1b0', face: [214, 13, 29], dark: 'rgba(3,6,16,0.66)', glow: 'rgba(255,138,60,', sky: null },
   palace: { bh: 32, bs: 36, bl: 37, mortar: '#24160c', blk: [36, 30, 50], top: '#eadbb8', face: [34, 28, 42], dark: 'rgba(22,10,34,0.42)', glow: 'rgba(255,170,90,', sky: true },
 };
-let RS = 2, BG = null;
+let RS = 2;
 const hsl = (h, s, l, a = 1) => `hsla(${h},${s}%,${l}%,${a})`;
 const staticFloor = ch => '_^cpgEQ'.includes(ch);
 
-function paintLevel() {
-  const T = THEMES[L.theme], w = L.cols * W, h = L.rows * H;
-  BG = document.createElement('canvas'); BG.width = Math.ceil(w * RS); BG.height = Math.ceil(h * RS);
-  const g = BG.getContext('2d'); g.scale(RS, RS);
+// Big levels would need a canvas too large for a phone, so each room's backdrop is painted
+// on first view and cached.
+const ROOM_BG = new Map();
+function paintLevel() { ROOM_BG.clear(); }
+function roomBG(rx, ry) {
+  const k = ry * 100 + rx;
+  let cv = ROOM_BG.get(k);
+  if (!cv) {
+    cv = document.createElement('canvas'); cv.width = Math.ceil(VIEW_W * RS); cv.height = Math.ceil(VIEW_H * RS);
+    const g = cv.getContext('2d'); g.scale(RS, RS); g.translate(-rx * VIEW_W, -ry * VIEW_H);
+    paintRegion(g, rx * ROOM_C - 1, ry * ROOM_R - 1, rx * ROOM_C + ROOM_C, ry * ROOM_R + ROOM_R);
+    ROOM_BG.set(k, cv);
+  }
+  return cv;
+}
+
+function paintRegion(g, c0, r0, c1, r1) {
+  const T = THEMES[L.theme], X0 = c0 * W, Y0 = Math.max(0, r0) * H, w = (c1 - c0 + 1) * W, h = (r1 + 1) * H - Y0;
+  r0 = Math.max(0, r0); r1 = Math.min(L.rows - 1, r1);
 
   // back wall bricks
-  g.fillStyle = T.mortar; g.fillRect(0, 0, w, h);
+  g.fillStyle = T.mortar; g.fillRect(X0, Y0, w, h);
   const bw = 42, bhgt = 21;
-  for (let y = 0, row = 0; y < h; y += bhgt, row++) {
-    for (let x = -(row % 2) * bw / 2; x < w; x += bw) {
+  for (let y = Math.floor(Y0 / bhgt) * bhgt, row = Math.floor(Y0 / bhgt); y < Y0 + h; y += bhgt, row++) {
+    for (let x = -(row % 2) * bw / 2 + Math.floor(X0 / bw - 1) * bw; x < X0 + w; x += bw) {
       const n = hash(x | 0, y | 0), n2 = hash(y | 0, x + 7 | 0);
       g.fillStyle = hsl(T.bh + (n2 - 0.5) * 8, T.bs + (n - 0.5) * 6, T.bl + (n - 0.5) * 7);
       g.fillRect(x + 1, y + 1, bw - 2, bhgt - 2);
@@ -26,20 +41,20 @@ function paintLevel() {
     }
   }
   // grain
-  for (let i = 0; i < w * h / 90; i++) {
-    const x = hash(i, 3) * w, y = hash(i, 9) * h;
+  for (let i = 0, seed = c0 * 31 + r0 * 7; i < w * h / 90; i++) {
+    const x = X0 + hash(i + seed, 3) * w, y = Y0 + hash(i + seed, 9) * h;
     g.fillStyle = hash(i, 5) > 0.5 ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.18)';
     g.fillRect(x, y, 1 + hash(i, 1) * 1.5, 1 + hash(i, 2) * 1.5);
   }
   // row shading: ceilings dim, floors catch a little light
-  for (let r = 0; r < L.rows; r++) {
+  for (let r = r0; r <= r1; r++) {
     const gr = g.createLinearGradient(0, r * H, 0, r * H + H);
     gr.addColorStop(0, 'rgba(0,0,0,.45)'); gr.addColorStop(0.35, 'rgba(0,0,0,.05)'); gr.addColorStop(1, 'rgba(0,0,0,.25)');
-    g.fillStyle = gr; g.fillRect(0, r * H, w, H);
+    g.fillStyle = gr; g.fillRect(X0, r * H, w, H);
   }
 
   // decorations on open back wall
-  for (let r = 0; r < L.rows; r++) for (let c = 0; c < L.cols; c++) {
+  for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) {
     if (tile(c, r) === '#') continue;
     const n = hash(c * 7 + 1, r * 13 + 5), x = c * W, fy = floorY(r);
     if (T.sky) {
@@ -54,7 +69,7 @@ function paintLevel() {
   }
 
   // wall blocks
-  for (let r = 0; r < L.rows; r++) for (let c = 0; c < L.cols; c++) {
+  for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) {
     if (tile(c, r) !== '#') continue;
     const x = c * W, y = r * H;
     // cast shadow onto the open neighbour on the right
@@ -78,7 +93,7 @@ function paintLevel() {
   }
 
   // floor slabs
-  for (let r = 0; r < L.rows; r++) for (let c = 0; c < L.cols; c++) {
+  for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) {
     const ch = tile(c, r);
     if (!staticFloor(ch)) continue;
     paintSlab(g, c, r, T, false);
@@ -88,11 +103,11 @@ function paintLevel() {
     if (ch === 'g') { g.fillStyle = '#1a1714'; g.fillRect(c * W + 20, r * H + 2, 24, 8); g.fillStyle = 'rgba(255,255,255,.12)'; g.fillRect(c * W + 20, r * H + 2, 24, 1.5); }
     if (ch === 'E') paintDoorFrame(g, c, r, T);
   }
-  for (const t of L.torches) paintBracket(g, t.c * W + W / 2, floorY(t.r) - 62);
+  for (const t of L.torches) if (t.c >= c0 && t.c <= c1 && t.r >= r0 && t.r <= r1) paintBracket(g, t.c * W + W / 2, floorY(t.r) - 62);
 
   // top-of-level ceiling shadow
   const cg = g.createLinearGradient(0, 0, 0, 30); cg.addColorStop(0, 'rgba(0,0,0,.6)'); cg.addColorStop(1, 'rgba(0,0,0,0)');
-  g.fillStyle = cg; g.fillRect(0, 0, w, 30);
+  if (r0 === 0) { g.fillStyle = cg; g.fillRect(X0, 0, w, 30); }
 }
 
 function paintSlab(g, c, r, T, loose) {

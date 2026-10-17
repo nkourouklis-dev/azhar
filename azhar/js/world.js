@@ -1,6 +1,7 @@
 // Level state: the tile grid plus every moving part (gates, plates, loose floors, blades, spikes).
 let L = null;
 const key = (c, r) => r * 1000 + c;
+const PLATE_LINK = { a: '1', b: '2', d: '3', e: '4', f: '5' }; // plate letter -> gate it opens
 
 function loadLevel(idx) {
   const def = LEVELS[idx];
@@ -14,14 +15,14 @@ function loadLevel(idx) {
   for (let r = 0; r < L.rows; r++) for (let c = 0; c < L.cols; c++) {
     const ch = grid[r][c], k = key(c, r);
     let t = ch;
+    if (PLATE_LINK[ch]) { L.plates.set(k, { c, r, link: PLATE_LINK[ch], down: 0 }); grid[r][c] = 'p'; continue; }
+    if (ch >= '1' && ch <= '5') { L.gates.set(ch, { c, r, open: 0, hold: 0, id: ch }); grid[r][c] = 'g'; continue; }
     switch (ch) {
       case 'P': L.start = { c, r }; t = '_'; break;
       case 'G': L.guards.push({ c, r }); t = '_'; break;
       case 't': L.torches.push({ c, r, seed: Math.random() * 10 }); t = '_'; break;
       case 'h': case 'H': case 'S': L.items.set(k, { type: ch, c, r, bob: Math.random() * 6 }); t = '_'; break;
-      case 'a': case 'b': L.plates.set(k, { c, r, link: ch === 'a' ? '1' : '2', down: 0 }); t = 'p'; break;
       case 'X': L.plates.set(k, { c, r, link: 'E', down: 0 }); t = 'p'; break;
-      case '1': case '2': L.gates.set(ch, { c, r, open: 0, hold: 0, id: ch }); t = 'g'; break;
       case 'E': L.door = { c, r, open: 0, opening: false }; break;
       case 'Q': L.princess = { c, r }; break;
       case '~': L.loose.set(k, { c, r, t: -1, wob: 0 }); break;
@@ -97,7 +98,7 @@ function updateWorld(dt) {
   for (const [k, l] of L.loose) {
     if (l.t < 0) continue;
     l.t += dt; l.wob = Math.sin(l.t * 60) * 2;
-    if (l.t > 0.5) {
+    if (l.t > 0.8) { // long enough to run across, as in the original
       L.loose.delete(k); L.grid[l.r][l.c] = ' ';
       L.falling.push({ x: l.c * W, y: floorY(l.r), vy: 0, r0: l.r, rot: 0 });
       Sfx.noise(0.2, 0.15, 900);

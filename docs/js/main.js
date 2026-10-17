@@ -74,6 +74,22 @@ const HELP = `<div class="help">
   <b>Πτώσεις</b><span>Ένας όροφος είναι ακίνδυνος, δύο πονάνε, τρεις σκοτώνουν.</span>
 </div>`;
 
+// The story, told before a new game. Tap through or skip.
+const INTRO = [
+  ['1989', 'Κάποτε, σε έναν υπολογιστή με δισκέτες και 16 χρώματα, ένας πρίγκιπας έτρεχε σε μπουντρούμια, κρεμιόταν από πεζούλια και πάλευε με φρουρούς. Ο μικρός Νικολής τον έπαιζε με τις ώρες, μέχρι να ακουστεί από την κουζίνα: «Κλείσε επιτέλους αυτό το μηχάνημα!»'],
+  ['Χρόνια μετά', 'Ο Νικολής μεγάλωσε. Πήρε κινητό, δουλειά, υποχρεώσεις και λίγα άσπρα μαλλιά. Τον πρίγκιπα όμως δεν τον ξέχασε ποτέ. Έτσι αποφάσισε να τον ξαναζωντανέψει, με τη βοήθεια ενός ρομπότ που δεν κουράζεται ποτέ. (Το ρομπότ κάποια στιγμή κρέμασε τον πρίγκιπα ανάποδα. Του το συγχωρέσαμε.)'],
+  ['Η ιστορία', 'Ο κακός Βεζίρης κλείδωσε την πριγκίπισσα στον πύργο και πέταξε εσένα στο πιο υγρό μπουντρούμι του παλατιού. Έχεις μια κλεψύδρα, ένα ζευγάρι παπούτσια και καθόλου σπαθί. Ο Βεζίρης έχει στρατό, παγίδες και ένα πολύ κακό μουστάκι.'],
+  ['Μια συμβουλή', 'Τα καρφιά είναι κοφτερά. Οι φρουροί δεν αστειεύονται. Τα πατώματα που τρέμουν, πέφτουν. Και αν κάτι πάει στραβά, μην ανησυχείς: ο Νικολής είναι στον καναπέ και φωνάζει «πήδα τώρα!»'],
+];
+function intro(i) {
+  if (i >= INTRO.length) return Game.start(0, TOTAL_TIME, 3);
+  const [eyebrow, text] = INTRO[i], last = i === INTRO.length - 1;
+  showCard(`<div class="eyebrow">${eyebrow}</div><p class="sub" style="max-width:34ch;line-height:1.45">${text}</p>
+    <div class="row"><button class="mbtn" id="bIn">${last ? 'Ξεκίνα!' : 'Συνέχεια'}</button>${last ? '' : '<button class="mbtn ghost" id="bSkip">Παράλειψη</button>'}</div>`);
+  on('bIn', () => intro(i + 1));
+  if (!last) on('bSkip', () => intro(INTRO.length));
+}
+
 function title() {
   Game.state = 'menu';
   const s = loadSave();
@@ -85,7 +101,7 @@ function title() {
       <button class="mbtn ghost" id="bHelp">Οδηγίες</button></div>
     ${/iPhone|iPad|iPod/.test(navigator.userAgent) && navigator.standalone === false && 'serviceWorker' in navigator && location.protocol === 'https:'
       ? '<p class="stat">Για να το έχεις σαν εφαρμογή: Κοινοποίηση ⬆ → «Προσθήκη στην οθόνη Αφετηρίας»</p>' : ''}`);
-  on('bNew', () => Game.start(0, TOTAL_TIME, 3));
+  on('bNew', () => intro(0));
   if (s) on('bCont', () => Game.start(s.level, s.timeLeft, s.maxHp || 3));
   on('bHelp', () => {
     showCard(`<div class="eyebrow">Οδηγίες</div><h2>Πώς παίζεται</h2>${HELP}<div class="row"><button class="mbtn" id="bBack">Πίσω</button></div>`);
