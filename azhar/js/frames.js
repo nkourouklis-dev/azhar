@@ -16,7 +16,7 @@
 //   H = sword hit lands, U = use the item, B = blocking, X = spikes are deadly (running feet)
 const FPS = 12, FT = 1 / FPS, U = W / 14, SP = 2;
 
-const STAND = { h: [0, -21], t: 3, hd: 0, f: [2, -1], b: [-3, -1], af: [8, 20], ab: [-6, 8], sw: null };
+const STAND = { h: [0, -22.4], t: 3, hd: 0, f: [2, -1], b: [-3, -1], af: [8, 20], ab: [-6, 8], sw: null };
 const S = o => Object.assign({}, STAND, o);
 const FIGHT_P = S({ h: [0, -19], t: 4, f: [8, -1], b: [-8, -1], af: [62, 88], ab: [-115, -165], sw: 98 });
 const F = o => Object.assign({}, FIGHT_P, o);
