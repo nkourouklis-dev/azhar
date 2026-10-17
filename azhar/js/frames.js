@@ -4,7 +4,7 @@
 //
 // Distances and frame counts follow the original's documented movement table, scaled to our grid
 // (one cell = 14 of its x units, one row = 63 of its screen pixels; our cell is 64px, our row 126px).
-// The poses themselves are our own: a small skeleton drawn as pixel art by sprite.js.
+// The poses themselves are our own: a small skeleton drawn as a smooth figure by body.js.
 //
 // Pose units are sprite pixels (1 sprite px = 2 world px), origin at the feet, +x forward, -y up.
 //   h: hip [x,y]   t: torso lean (deg, + forward)   hd: extra head tilt
@@ -186,11 +186,11 @@ const JUMPUP = [ // straight up and down, nothing to catch (13 frames)
 
 // ---- hanging and climbing -----------------------------------------------------------------
 // While hanging the root is still the feet, 90px (45 sprite px) below the hands.
-const hangP = sx => ({ h: [sx * 0.5 - 1, -20], t: -4, hd: 4, f: [sx, -0.5 - Math.abs(sx) * 0.2], b: [sx - 2, -1], fk: -1, bk: -1, hf: [5, -45], hb: [4, -45], af: null, ab: null });
+const hangP = sx => ({ h: [sx * 0.4, -21], t: 0, hd: 0, f: [sx, -0.5], b: [sx - 2, -0.5], hf: [3, -45], hb: [2, -45], af: null, ab: null });
 const JUMPGRAB = [ // spring up and catch the ledge; the root rise is set by player.js
   ...JUP_PREP,
   fr(S({ h: [0, -23], t: -2, f: [0, -3], b: [-1, -2], af: [170, 178], ab: [165, 176] }), 0, 0, 'a'),
-  fr(S({ h: [0, -22], t: -3, f: [2, -5], b: [-1, -4], fk: -1, af: [176, 180], ab: [172, 178] }), 0, 0, 'a'),
+  fr(S({ h: [0, -22], t: -3, f: [2, -5], b: [-1, -4], af: [176, 180], ab: [172, 178] }), 0, 0, 'a'),
   fr(S(hangP(3)), 0, 0, 's'),
 ];
 const HANG_FR = [3, 5, 3, 0, -2, -3, -2, 0, 1, 0].map(sx => fr(S(hangP(sx))));
@@ -198,14 +198,14 @@ const HANG_FR = [3, 5, 3, 0, -2, -3, -2, 0, 1, 0].map(sx => fr(S(hangP(sx))));
 // Climbing up is authored in ledge space: origin at the ledge corner, +x onto the ledge.
 // [root, hip, lean, near ankle, far ankle, near hand, far hand, near knee dir]
 const CLIMB_SRC = [
-  [[-5, 45], [-6, 25], -4, [-5, 45], [-6, 44], [0, 0], [-1, 0], -1],
-  [[-5, 45], [-6, 24], -3, [-4, 44], [-6, 44], [0, 0], [-1, 0], -1],
-  [[-5, 40], [-6, 20], -2, [-3, 38], [-6, 40], [0, 0], [-1, 0], -1],
-  [[-5, 33], [-6, 13], 0, [-4, 32], [-6, 33], [0, 0], [-1, 0], -1],
-  [[-5, 27], [-6, 8], 5, [-4, 26], [-6, 27], [0, 0], [-1, 0], -1],
-  [[-5, 27], [-6, 7], 8, [-4, 26], [-6, 27], [1, 0], [0, 0], -1],
-  [[-5, 20], [-5, 4], 30, [-6, 22], [-7, 24], [2, 0], [1, 0], -1],
-  [[-4, 15], [-4, 1], 45, [-6, 18], [-7, 20], [3, 0], [2, 0], -1],
+  [[-5, 45], [-6, 25], -4, [-5, 45], [-6, 44], [0, 0], [-1, 0], 1],
+  [[-5, 45], [-6, 24], -3, [-4, 44], [-6, 44], [0, 0], [-1, 0], 1],
+  [[-5, 40], [-6, 20], -2, [-3, 38], [-6, 40], [0, 0], [-1, 0], 1],
+  [[-5, 33], [-6, 13], 0, [-4, 32], [-6, 33], [0, 0], [-1, 0], 1],
+  [[-5, 27], [-6, 8], 5, [-4, 26], [-6, 27], [0, 0], [-1, 0], 1],
+  [[-5, 27], [-6, 7], 8, [-4, 26], [-6, 27], [1, 0], [0, 0], 1],
+  [[-5, 20], [-5, 4], 30, [-6, 22], [-7, 24], [2, 0], [1, 0], 1],
+  [[-4, 15], [-4, 1], 45, [-6, 18], [-7, 20], [3, 0], [2, 0], 1],
   [[-2, 7], [-3, -1], 50, [1, -1], [-6, 14], [4, 0], [3, 0], 1],
   [[0, 4], [0, -6], 45, [2, -1], [-5, 8], [6, 0], [5, 0], 1],
   [[2, 1], [2, -9], 40, [3, -1], [-3, 2], [8, 0], [7, 0], 1],

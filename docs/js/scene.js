@@ -61,20 +61,21 @@ function drawScene(ctx) {
   // princess
   if (L.princess && inView(L.princess.c, L.princess.r)) {
     const q = L.princess;
-    drawSprite(ctx, q.c * W + W / 2 + 8, floorY(q.r), -1, Game.state === 'won' ? SEQ.win.frames[0].p : PRINCESS_POSE, PRINCESS, { shadow: true });
+    drawChar(ctx, q.c * W + W / 2 + 8, floorY(q.r), -1, Game.state === 'won' ? SEQ.win.frames[0].p : PRINCESS_POSE, PRINCESS, { ground: true });
   }
   // guards
   for (const g of guards) {
     if (g.y > 1e5 || !inView(colOf(g.x), rowOf(g.y))) continue;
     if (!g.look) g.look = guardLook(g.style);
-    drawSprite(ctx, g.x, g.y, g.dir, g.frs[g.fi].p, g.look, { flash: g.flash > 0 && Math.floor(g.flash * 20) % 2 === 0, shadow: g.seq !== 'fall' });
+    drawChar(ctx, g.x, g.y, g.dir, g.frs[g.fi].p, g.look, { swordDrawn: g.alive, hasSword: !g.alive, ground: g.seq !== 'fall', beard: true, flash: g.flash, still: !g.alive });
     if (!g.alive && g.deadT < 0.6 && g.seq !== 'fall') for (let i = 0; i < 2; i++) spawn({ x: g.x - g.dir * rand(0, 40), y: g.y - 4, vx: rand(-20, 20), vy: rand(-30, -10), life: 1, g: -5, size: rand(6, 12), kind: 'dust' });
   }
   // prince
   if (P.seq !== 'gone') {
     const holding = P.seq === 'drink' && P.fi >= 3 && P.fi <= 16 ? P.drinkCol : null;
-    drawSprite(ctx, P.x, P.y, P.dir, curFrame().p, PRINCE, { flash: P.flash > 0 && P.alive && Math.floor(P.flash * 20) % 2 === 0, scabbard: P.hasSword, hold: holding,
-      shadow: onGround(), alpha: P.seq === 'exit' ? clamp(1 - (P.fi - 4) / 7, 0, 1) : null });
+    const pose = curFrame().p;
+    drawChar(ctx, P.x, P.y, P.dir, pose, PRINCE, { hasSword: P.hasSword, ground: onGround() || !P.alive, flash: P.alive ? P.flash : 0, jewel: '#b3261e', still: !P.alive, hold: holding,
+      alpha: P.seq === 'exit' ? clamp(1 - (P.fi - 4) / 7, 0, 1) : null });
   }
   // front layer: gates and blades
   for (const g of L.gates.values()) if (inView(g.c, g.r)) drawGate(ctx, g);
