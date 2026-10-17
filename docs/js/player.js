@@ -95,7 +95,9 @@ function enterFrame() {
 }
 
 function land() {
-  const c = pCol(), r = pRow();
+  let c = pCol(), r = pRow();
+  // a landing just short of the far edge still catches it, as in the original
+  if (!standable(c, r) && standable(colOf(P.x + P.dir * 16), r) && !hBlock(colOf(P.x + P.dir * 16), r)) { P.x = (P.dir > 0 ? colOf(P.x + 16) * W : (colOf(P.x - 16) + 1) * W) + P.dir * 4; c = pCol(); }
   if (!standable(c, r)) { startFall(P.dir * 3 * U, true); return; }
   if (tile(c, r) === '^') { const s = L.spikes.get(key(c, r)); if (s) s.ext = 1; killPlayer('spikes'); return; }
   Sfx.land();
@@ -207,8 +209,9 @@ function control() {
   const go = want || tap, fi = P.fi, last = fi === P.frs.length - 1;
   switch (P.seq) {
     case 'stand': return standControl(go);
-    case 'ready': // one frame after the press: still held means run, a tap means a careful step
-      if (want === P.dir) setSeq('startrun', 1); else beginStep(1);
+    case 'ready': // let go within a quarter second = a careful step; keep holding = run
+      if (want !== P.dir) { beginStep(1); return true; }
+      if (P.ft >= 3) { setSeq('startrun', 1); return true; }
       return true;
     case 'startrun':
       if (lat.u) { if (atDoor()) { setSeq('exit'); Sfx.door(); } else { setSeq(fi >= 4 ? 'runjump' : 'standjump'); Sfx.jump(); } return true; }

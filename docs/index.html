@@ -102,7 +102,12 @@ p{margin:0;line-height:1.5;color:var(--mist);font-size:14px;max-width:44ch;text-
 <script src="js/main.js"></script>
 
 <script>
-if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+if ('serviceWorker' in navigator) {
+  // when a new version takes over, reload once so the new game files are used right away
+  const had = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (had && !window.__reloaded) { window.__reloaded = true; location.reload(); } });
+  addEventListener('load', () => navigator.serviceWorker.register('sw.js').then(r => r.update()).catch(() => {}));
+}
 </script>
 </body>
 </html>

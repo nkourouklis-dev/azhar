@@ -36,7 +36,12 @@ const html = `<!doctype html>
 <body>
 ${body}
 <script>
-if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+if ('serviceWorker' in navigator) {
+  // when a new version takes over, reload once so the new game files are used right away
+  const had = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (had && !window.__reloaded) { window.__reloaded = true; location.reload(); } });
+  addEventListener('load', () => navigator.serviceWorker.register('sw.js').then(r => r.update()).catch(() => {}));
+}
 </script>
 </body>
 </html>
@@ -67,11 +72,11 @@ self.addEventListener('activate', e => {
 });
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-  e.respondWith(caches.match(e.request).then(hit => hit || fetch(e.request).then(res => {
-    // keep the Google Fonts files too, so text looks right offline
+  // network first so a new version shows up at once; the cache is the offline fallback
+  e.respondWith(fetch(e.request).then(res => {
     if (res.ok || res.type === 'opaque') { const copy = res.clone(); caches.open(CACHE).then(c => c.put(e.request, copy)); }
     return res;
-  }).catch(() => hit)));
+  }).catch(() => caches.match(e.request)));
 });
 `);
 fs.writeFileSync(path.join(out, '.nojekyll'), '');
