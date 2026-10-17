@@ -81,11 +81,12 @@ const INTRO = [
   ['Η ιστορία', 'Ο κακός Βεζίρης κλείδωσε την πριγκίπισσα στον πύργο και πέταξε εσένα στο πιο υγρό μπουντρούμι του παλατιού. Έχεις μια κλεψύδρα, ένα ζευγάρι παπούτσια και καθόλου σπαθί. Ο Βεζίρης έχει στρατό, παγίδες και ένα πολύ κακό μουστάκι.'],
   ['Μια συμβουλή', 'Τα καρφιά είναι κοφτερά. Οι φρουροί δεν αστειεύονται. Τα πατώματα που τρέμουν, πέφτουν. Και αν κάτι πάει στραβά, μην ανησυχείς: ο Νικολής είναι στον καναπέ και φωνάζει «πήδα τώρα!»'],
 ];
+// Plays every time the game opens; then the title menu.
 function intro(i) {
-  if (i >= INTRO.length) return Game.start(0, TOTAL_TIME, 3);
+  if (i >= INTRO.length) return title();
   const [eyebrow, text] = INTRO[i], last = i === INTRO.length - 1;
   showCard(`<div class="eyebrow">${eyebrow}</div><p class="sub" style="max-width:34ch;line-height:1.45">${text}</p>
-    <div class="row"><button class="mbtn" id="bIn">${last ? 'Ξεκίνα!' : 'Συνέχεια'}</button>${last ? '' : '<button class="mbtn ghost" id="bSkip">Παράλειψη</button>'}</div>`);
+    <div class="row"><button class="mbtn" id="bIn">${last ? 'Πάμε!' : 'Συνέχεια'}</button>${last ? '' : '<button class="mbtn ghost" id="bSkip">Παράλειψη</button>'}</div>`);
   on('bIn', () => intro(i + 1));
   if (!last) on('bSkip', () => intro(INTRO.length));
 }
@@ -101,7 +102,7 @@ function title() {
       <button class="mbtn ghost" id="bHelp">Οδηγίες</button></div>
     ${/iPhone|iPad|iPod/.test(navigator.userAgent) && navigator.standalone === false && 'serviceWorker' in navigator && location.protocol === 'https:'
       ? '<p class="stat">Για να το έχεις σαν εφαρμογή: Κοινοποίηση ⬆ → «Προσθήκη στην οθόνη Αφετηρίας»</p>' : ''}`);
-  on('bNew', () => intro(0));
+  on('bNew', () => Game.start(0, TOTAL_TIME, 3));
   if (s) on('bCont', () => Game.start(s.level, s.timeLeft, s.maxHp || 3));
   on('bHelp', () => {
     showCard(`<div class="eyebrow">Οδηγίες</div><h2>Πώς παίζεται</h2>${HELP}<div class="row"><button class="mbtn" id="bBack">Πίσω</button></div>`);
@@ -165,6 +166,6 @@ function frame(now) {
 layout();
 loadLevel(0); spawnGuards(); P.maxHp = 3; resetPlayer(false); paintLevel(); updateCamera();
 (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(() => {});
-title();
+intro(0);
 requestAnimationFrame(frame);
 window.claude?.hot?.snapshot?.(() => ({ level: Game.level, timeLeft: Game.timeLeft }));
