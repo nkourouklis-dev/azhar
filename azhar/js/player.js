@@ -210,9 +210,9 @@ function control() {
   const go = want || tap, fi = P.fi, last = fi === P.frs.length - 1;
   switch (P.seq) {
     case 'stand': return standControl(go);
-    case 'ready': // let go within a quarter second = a careful step; keep holding = run
+    case 'ready': // let go within a third of a second = a careful step; keep holding = run
       if (want !== P.dir) { beginStep(1); return true; }
-      if (P.ft >= 3) { setSeq('startrun', 1); return true; }
+      if (P.ft >= 4) { setSeq('startrun', 1); return true; }
       return true;
     case 'startrun':
       if (lat.u) { if (atDoor()) { setSeq('exit'); Sfx.door(); } else { setSeq(fi >= 4 ? 'runjump' : 'standjump'); Sfx.jump(); } return true; }
@@ -230,8 +230,8 @@ function control() {
       return false;
     case 'step': // a tap during a step is remembered and taken as soon as this one allows
       if (tap === P.dir) P.qStep = 1;
-      if (fi >= 9 && (go === P.dir || P.qStep)) { beginStep(1); return true; }
-      if (fi >= 9 && lat.u) { setSeq('stand'); return standControl(go); }
+      if (fi >= P.frs.length - 3 && (go === P.dir || P.qStep)) { beginStep(1); return true; }
+      if (fi >= P.frs.length - 3 && lat.u) { setSeq('stand'); return standControl(go); }
       return false;
     case 'testfoot':
       if (fi >= 6 && (lat.u || lat.d || go)) { setSeq('stand'); return standControl(go); }

@@ -1,5 +1,5 @@
 // Offline cache. A new build changes the version, which replaces the old cache.
-const CACHE = 'azhar-202610171419';
+const CACHE = 'azhar-202610171425';
 const FILES = ["./","index.html","manifest.webmanifest","js/audio.js","js/body.js","js/combat.js","js/data.js","js/figure.js","js/frames.js","js/input.js","js/levels.js","js/main.js","js/player.js","js/render.js","js/scene.js","js/world.js","icons/icon-180.png","icons/icon-192.png","icons/icon-512.png"];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES))); self.skipWaiting(); });
 self.addEventListener('activate', e => {

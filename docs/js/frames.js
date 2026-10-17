@@ -107,12 +107,14 @@ function stepFrames(units) { // a careful step of `units` (1..14) original x uni
   units = Math.max(1, Math.min(14, Math.round(units)));
   if (stepCache.has(units)) return stepCache.get(units);
   const k = units / 14;
+  // short steps skip the long settle at the end, so a tap gives a quick little step
+  const src = units <= 8 ? [0, 1, 2, 3, 4, 5, 6, 11].map(i => STEP_SRC[i]) : STEP_SRC;
   let root = 0;
-  const out = STEP_SRC.map(([o, dx, nf, ff], i) => {
+  const out = src.map(([o, dx, nf, ff], i) => {
     root += dx * U * k / SP;
     // shorter steps shrink the stride around each foot's starting spot
     const p = S(Object.assign({}, o, { f: [2 + (nf[0] - 2) * k - root, nf[1]], b: [-3 + (ff[0] + 3) * k - root, ff[1]] }));
-    return fr(p, dx * k, 0, i === 3 || i === 7 ? 's' : '');
+    return fr(p, dx * k, 0, i === 3 ? 's' : '');
   });
   stepCache.set(units, out);
   return out;
