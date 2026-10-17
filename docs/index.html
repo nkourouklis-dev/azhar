@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#07090f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Azhar">
+<meta name="description" content="Azhar: Η Φυλακή του Βεζίρη. Παιχνίδι δράσης με σπαθιά, παγίδες και μια κλεψύδρα.">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+</head>
+<body>
+<title>Azhar</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=GFS+Didot&family=Fira+Sans:wght@400;600;800&display=swap">
+<style>
+/* Layout: one full-screen stage; canvas letterboxed, thumb controls pinned to the bottom corners. */
+:root{
+  --night:#07090f; --ink:#f3e9d2; --sand:#d8b26a; --ember:#e0702e; --blood:#b3261e; --mist:rgba(243,233,210,.62);
+  --display:"GFS Didot","Didot","Bodoni 72",Georgia,serif;
+  --ui:"Fira Sans","Helvetica Neue",Arial,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%;margin:0;background:var(--night);color:var(--ink);overflow:hidden;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:none;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--ui);padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px))}
+#stage{position:fixed;inset:0;overflow:hidden}
+#cv{position:absolute;left:0;top:0;image-rendering:auto;background:#000;box-shadow:0 0 0 1px rgba(216,178,106,.12),0 20px 60px rgba(0,0,0,.6)}
+#hint{position:absolute;left:0;right:0;text-align:center;font-size:13px;color:var(--mist);letter-spacing:.04em;pointer-events:none}
+/* thumb controls */
+.pad{position:absolute;bottom:calc(14px + env(safe-area-inset-bottom,0px));display:grid;gap:10px;touch-action:none;z-index:5}
+#padL{left:calc(14px + env(safe-area-inset-left,0px));grid-template-columns:repeat(2,var(--b))}
+#padR{right:calc(14px + env(safe-area-inset-right,0px));grid-template-columns:repeat(2,var(--b));grid-template-areas:"act up" ". down"}
+#padR [data-k=u]{grid-area:up}#padR [data-k=a]{grid-area:act;align-self:end}#padR [data-k=d]{grid-area:down}
+.btn{--b:68px;width:var(--b);height:var(--b);border-radius:50%;display:grid;place-items:center;
+  background:radial-gradient(circle at 35% 30%,rgba(255,240,210,.20),rgba(255,240,210,.06) 60%,rgba(0,0,0,.15));
+  border:1.5px solid rgba(216,178,106,.45);color:var(--ink);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);transition:transform .06s,background .06s}
+.pad{--b:68px}
+.btn svg{width:46%;height:46%;fill:currentColor;opacity:.9}
+.btn.on{transform:scale(.92);background:radial-gradient(circle,rgba(224,112,46,.55),rgba(224,112,46,.18));border-color:var(--ember)}
+.btn.act{border-color:rgba(224,112,46,.7)}
+#pause{position:absolute;top:calc(10px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));z-index:6;
+  width:40px;height:40px;border-radius:12px;border:1px solid rgba(216,178,106,.35);background:rgba(0,0,0,.35);color:var(--ink);font:600 15px var(--ui)}
+#pause:focus-visible,.mbtn:focus-visible{outline:2px solid var(--sand);outline-offset:3px}
+/* menu overlay */
+#menu{position:absolute;inset:0;z-index:10;display:grid;place-items:center;
+  background:radial-gradient(ellipse at 50% 35%,rgba(70,40,20,.55),rgba(5,6,12,.92) 70%);
+  padding:calc(16px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.card{max-width:520px;width:100%;text-align:center;display:grid;gap:14px;justify-items:center}
+.eyebrow{font:600 11px var(--ui);letter-spacing:.32em;text-transform:uppercase;color:var(--sand)}
+h1{font:400 clamp(54px,14vw,96px)/.9 var(--display);margin:0;letter-spacing:.06em;
+  background:linear-gradient(180deg,#fff3d6 10%,#e8b860 55%,#9a5a22);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 4px 18px rgba(224,112,46,.35))}
+h2{font:400 clamp(28px,7vw,40px)/1 var(--display);margin:0;color:var(--ink);text-wrap:balance}
+.sub{font:400 clamp(18px,4.5vw,22px) var(--display);color:var(--ink);margin:0;opacity:.9}
+p{margin:0;line-height:1.5;color:var(--mist);font-size:14px;max-width:44ch;text-wrap:pretty}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.mbtn{font:800 15px var(--ui);letter-spacing:.06em;padding:13px 26px;border-radius:999px;border:1px solid var(--sand);
+  background:linear-gradient(180deg,#e9b764,#b9772f);color:#2a1606;box-shadow:0 6px 24px rgba(224,112,46,.3)}
+.mbtn.ghost{background:transparent;color:var(--ink);border-color:rgba(216,178,106,.5);box-shadow:none}
+.help{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;text-align:left;font-size:13.5px;color:var(--mist);max-width:420px}
+.help b{color:var(--ink);font-weight:600;white-space:nowrap}
+.stat{font:600 13px var(--ui);color:var(--sand);letter-spacing:.08em;font-variant-numeric:tabular-nums}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){.btn{transition:none}}
+</style>
+
+<div id="stage">
+  <canvas id="cv"></canvas>
+  <div id="hint">Γύρισε το κινητό οριζόντια για μεγαλύτερη οθόνη</div>
+  <button id="pause" aria-label="Παύση">II</button>
+  <div class="pad" id="padL">
+    <div class="btn" data-k="l" aria-label="Αριστερά"><svg viewBox="0 0 24 24"><path d="M15.5 4 6 12l9.5 8z"/></svg></div>
+    <div class="btn" data-k="r" aria-label="Δεξιά"><svg viewBox="0 0 24 24"><path d="M8.5 4 18 12l-9.5 8z"/></svg></div>
+  </div>
+  <div class="pad" id="padR">
+    <div class="btn act" data-k="a" aria-label="Σπαθί"><svg viewBox="0 0 24 24"><path d="M19.5 2.5 21.5 4.5 10 16l-1.5-1.5zM8 14.5l1.5 1.5-2 2 1.5 1.5-1.5 1.5-1.5-1.5L4 21.5 2.5 20l1.5-2-1.5-1.5L4 15l1.5 1.5z"/></svg></div>
+    <div class="btn" data-k="u" aria-label="Πήδημα"><svg viewBox="0 0 24 24"><path d="M4 15.5 12 6l8 9.5z"/></svg></div>
+    <div class="btn" data-k="d" aria-label="Κάτω"><svg viewBox="0 0 24 24"><path d="M4 8.5 12 18l8-9.5z"/></svg></div>
+  </div>
+  <div id="menu"><div class="card" id="menuCard"></div></div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/input.js"></script>
+<script src="js/world.js"></script>
+<script src="js/player.js"></script>
+<script src="js/combat.js"></script>
+<script src="js/figure.js"></script>
+<script src="js/body.js"></script>
+<script src="js/smooth.js"></script>
+<script src="js/render.js"></script>
+<script src="js/scene.js"></script>
+<script src="js/main.js"></script>
+
+<script>
+if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+</script>
+</body>
+</html>
